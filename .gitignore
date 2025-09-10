@@ -1,0 +1,245 @@
+################################################################
+# Diretórios Críticos Não Versionáveis
+################################################################
+
+# Dados persistentes de serviços
+/data/*
+!/data/.gitkeep
+
+# Secrets e informações sensíveis
+/secrets/*
+!/secrets/.gitkeep
+
+# Backups gerados automaticamente
+/backup/automated/*
+!/backup/automated/.gitkeep
+
+# Logs de aplicação e serviços
+/logs/*
+*.log
+*.log.*
+
+# Cache de builds e dependências
+.cache/
+**/node_modules/
+
+################################################################
+# Arquivos de Configuração Sensíveis
+################################################################
+
+# Variáveis de ambiente
+.env
+.env.*.local
+.env.local
+.env.development
+.env.production
+
+# Overrides de compose com possíveis credenciais
+docker-compose.override.yml
+
+# Configurações específicas de ambientes
+**/config.local.*
+**/secrets.local.*
+
+################################################################
+# Artefatos de Build e Runtime
+################################################################
+
+# Artefatos de compilação
+/target/
+/dist/
+/build/
+*.jar
+*.war
+*.ear
+*.pyc
+*.pyo
+__pycache__/
+
+# Pacotes e binários
+*.deb
+*.rpm
+*.whl
+*.egg-info/
+
+# Docker build artifacts
+**/.dockerignore
+!infra/docker/**/Dockerfile  # Mantém os Dockerfiles oficiais
+
+################################################################
+# Configurações de IDEs e Editores
+################################################################
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/remote.json
+
+# IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse
+.settings/
+.project
+.classpath
+bin/
+
+# Vim/Neovim
+*.swp
+*.swo
+*.un~
+*.tmp
+
+################################################################
+# Sistemas Operacionais
+################################################################
+
+# macOS
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.*
+.metadata_never_index
+
+# Windows
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+[Dd]esktop.ini
+
+# Linux
+*~
+
+################################################################
+# Ferramentas DevOps Específicas
+################################################################
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.terraform.lock.hcl
+
+# Ansible
+*.retry
+galaxy-*
+*.retry
+*.pyc
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# Packer
+packer_cache/
+*.manifest.json
+
+# Vagrant
+.vagrant/
+*.box
+
+# Helm
+**/charts/
+**/tmpcharts/
+
+################################################################
+# Linguagens e Frameworks
+################################################################
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.pnp.*
+
+# Python
+__pycache__/
+venv/
+env/
+.venv/
+*.py[cod]
+.pytest_cache/
+
+# Go
+/bin/
+/pkg/
+*.exe
+*.test
+
+# Java
+.gradle/
+build/
+!**/build.gradle
+.gradletasknamecache
+
+################################################################
+# Arquivos Temporários e Caches
+################################################################
+
+# Cache geral
+.cache/
+
+# Arquivos temporários
+*.tmp
+*.bak
+*.swp
+*~
+~$*
+
+# Cloud-init
+cloud-init.log
+cloud-init-output.log
+
+################################################################
+# Exceções Controladas
+################################################################
+
+# Mantém arquivos .example e templates
+!.env.example
+!docker-compose.override.yml.example
+!/config/**/*.example
+!/config/**/*.template
+
+# Mantém estrutura de diretórios vazia necessária
+!/config/nginx/ssl/certs/.gitkeep
+!/config/nginx/ssl/private/.gitkeep
+!/secrets/ssh/.gitkeep
+!/secrets/ssl/certificates/.gitkeep
+!/secrets/ssl/keys/.gitkeep
+!/backup/automated/.gitkeep
+!/backup/manual/.gitkeep
+
+# Documentação técnica
+!/docs/architecture/diagrams/sample.diagram
+!/docs/runbooks/template.md
+
+# Scripts essenciais
+!/scripts/health-check.sh.example
+!/scripts/backup-all.sh.example
+
+################################################################
+# Regras Específicas para Monitoramento
+################################################################
+
+# Dados de monitoramento
+/monitoring/prometheus/data/
+/monitoring/grafana/data/
+/monitoring/loki/data/
+
+# Dashboards provisionados automaticamente
+!/monitoring/grafana/provisioning/dashboards/

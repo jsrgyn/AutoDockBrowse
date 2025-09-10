@@ -1,0 +1,6 @@
+docker system prune -a --volumes
+
+docker-compose up --build
+
+docker-compose logs
+

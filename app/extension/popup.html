@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Savi</title>
+    <style>
+      body {
+        width: 600px;
+        font-family: "Arial", sans-serif;
+        background-color: #f4f6f8;
+        color: #333;
+        margin: 0;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+      .popup-container {
+        border: 1px solid #d1d5db;
+        border-radius: 12px;
+        padding: 20px;
+        margin: 10px;
+        background-color: #ffffff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        max-width: 400px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .popup-container legend {
+        font-size: 1.5rem;
+        font-weight: bold;
+        color: #007bff;
+        padding: 0 10px;
+      }
+      .popup-container label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #555;
+        font-size: 0.95rem;
+      }
+      .popup-container select {
+        width: 100%;
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 1rem;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
+        appearance: none;
+        -moz-appearance: none;
+        -webkit-appearance: none;
+      }
+      .popup-container input,
+      .popup-container button {
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+
+      .popup-container input:focus,
+      .popup-container select:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+      }
+      .popup-container input:required,
+      .popup-container select:required {
+        background-color: #e8f5e9; /* Fundo verde claro */
+        border: 1px solid #4caf50; /* Borda verde */
+      }
+
+      .popup-container input:required:focus,
+      .popup-container select:required:focus {
+        outline: none;
+        border-color: #2e7d32; /* Borda verde mais escura ao focar */
+        box-shadow: 0 0 5px rgba(46, 125, 50, 0.5); /* Efeito de foco */
+      }
+
+      .popup-container .btn-iniciar {
+        background-color: #007bff;
+        color: #ffffff;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+      }
+
+      .popup-container .btn-iniciar:hover {
+        background-color: #0056b3;
+      }
+
+      .popup-container .btn-parar {
+        background-color: #dc3545;
+        color: #ffffff;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.3s ease;
+      }
+
+      .popup-container .btn-parar:hover {
+        background-color: #a71d2a;
+      }
+
+      .popup-container button:disabled {
+        background-color: #e0e0e0;
+        color: #9e9e9e;
+        border: 1px solid #bdbdbd;
+        cursor: not-allowed;
+        opacity: 0.7;
+      }
+
+      .popup-container button:disabled:hover {
+        background-color: #e0e0e0;
+        color: #9e9e9e;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- <h1>Savi</h1> -->
+    <fieldset class="popup-container">
+      <legend>Orçamentos</legend>
+
+      <label for="diasRetroceder">Dias a Retroceder:</label>
+      <input id="diasRetroceder" type="number" min="1" max="9999" required />
+
+      <label for="diasProcessar">Dias a Processar:</label>
+      <input id="diasProcessar" type="number" min="1" max="365" />
+
+      <label for="dtFimProcessamento">Data Fim do Processamento:</label>
+      <input id="dtFimProcessamento" type="date" required />
+
+      <label for="statusProcessamento">Status do Processamento:</label>
+      <select id="statusProcessamento" required>
+        <option value selected="selected">Selecione</option>
+        <option value="0">DIGITADO</option>
+        <option value="1">PENDENTE</option>
+        <option value="2">CANCELADO</option>
+        <option value="3">AGUARDANDO PAGAMENTO</option>
+        <option value="6">AGUARDANDO CONFIRMACAO DO CLIENTE</option>
+        <option value="7">ORCAMENTO VALIDADO</option>
+        <option value="9">PROCESSADO</option>
+        <option value="10">VALIDADO E AUSENTE DE CRITICA</option>
+        <option value="11">EM DIGITACAO PELA CONCESSIONARIA</option>
+        <option value="12">ASSINADO PELO CLIENTE</option>
+        <option value="13">ORCAMENTO RECUSADO PELO CLIENTE</option>
+        <option value="14">CANCELADO POR FALTA DE PAGAMENTO [7 DIAS]</option>
+        <option value="15">CANCELADO POR DECURSO DE PRAZO [25 DIAS]</option>
+        <option value="16">CANCELADO POR DIVERGENCIA NA DS</option>
+        <option value="17">VALIDO COM DADOS DIVERGENTES</option>
+        <option value="18">PAGO PELO CLIENTE</option>
+        <option value="19">PAGO AO VENDEDOR</option>
+        <option value="20">PENDENTE AUDITORIA MEDICA</option>
+      </select>
+      <button id="btnIniciarAgd" class="btn-iniciar">Iniciar</button>
+      <button id="btnPararAgd" class="btn-parar">Parar</button>
+    </fieldset>
+    <fieldset class="popup-container" style="display: none">
+      <legend>Agenda</legend>
+
+      <input type="number" id="mes" value="1" min="1" max="12" />
+
+      <input type="number" id="ano" value="2023" min="2022" max="2030" />
+
+      <button id="executeAgenda">Agenda</button>
+    </fieldset>
+    <fieldset class="popup-container" style="display: none">
+      <legend>Produção</legend>
+      <input type="number" id="mes" value="1" min="1" max="12" />
+      <input type="number" id="ano" value="2023" min="2022" max="2030" />
+
+      <button id="executeProducao">Producao</button>
+    </fieldset>
+    <script src="popup.js" type="module"></script>
+    <script src="savi.js" type="module"></script>
+  </body>
+</html>

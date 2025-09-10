@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "Savi",
+  "version": "1.0",
+  "description": "Processar registros!",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.hapvida.com.br/corretor/*",
+        "https://savi3.hapvida.com.br/savi3/pages/efetivacao/*",
+        "https://savi3.hapvida.com.br/savi3/pages/relatorio/*",
+        "https://saviatendimento.com.br/saviatendimento/pages/relatorio/*",
+        "https://saviatendimento.com.br/saviatendimento/pages/efetivacao/*"
+      ],
+      "js": ["savi.js"]
+    }
+  ]
+}
