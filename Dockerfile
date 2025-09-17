@@ -36,4 +36,9 @@ COPY --from=builder /install /usr/local
 
 COPY app/ .
 
+# Verificar estrutura de arquivos
+RUN echo "=== Verificando estrutura de arquivos ===" && \
+    echo "Conteúdo de /app:" && ls -la /app/ && \
+    echo "Conteúdo de /app/extension:" && ls -la /app/extension/ || echo "Diretório extension não encontrado"
+
 CMD ["python", "script.py"]

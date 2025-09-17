@@ -9,13 +9,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "permissions": ["storage", "management"],
-  "web_accessible_resources": [
-    {
-      "resources": ["popup.html"],
-      "matches": ["<all_urls>"]
-    }
-  ],
+  "permissions": ["storage"],
   "content_scripts": [
     {
       "matches": [
@@ -25,7 +19,8 @@
         "https://saviatendimento.com.br/saviatendimento/pages/relatorio/*",
         "https://saviatendimento.com.br/saviatendimento/pages/efetivacao/*"
       ],
-      "js": ["savi.js"]
+      "js": ["savi.js", "content.js"],
+      "run_at": "document_start"
     }
   ]
 }

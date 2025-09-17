@@ -1,25 +1,3 @@
-// --- INÍCIO: Lógica para comunicação com o script Python ---
-document.addEventListener(
-  "GET_POPUP_URL_REQUEST",
-  function (event) {
-    console.log("Content script (savi.js) recebeu o evento de pedido de URL.");
-    const popupUrl = chrome.runtime.getURL("popup.html");
-
-    // Cria um elemento no DOM para armazenar a URL
-    let container = document.getElementById("copilot-extension-url-container");
-    if (!container) {
-      container = document.createElement("div");
-      container.id = "copilot-extension-url-container";
-      container.style.display = "none"; // Oculta o elemento
-      document.body.appendChild(container);
-    }
-    container.textContent = popupUrl;
-    console.log("URL do Popup injetada no DOM.");
-  },
-  false
-);
-// --- FIM: Lógica para comunicação ---
-
 // const URLBase = "http://localhost:3000";
 const URLBase = "https://api.drmais.com.br";
 
@@ -196,13 +174,13 @@ function processarTableOrcamento() {
             "No records found."
         ) {
           const obj = {
-            cpf: dado[`<span class="ui-column-title">beneficiário</span>`]
-              ? dado[`<span class="ui-column-title">beneficiário</span>`]
+            cpf: dado[`<spanclass="ui-column-title">beneficiário</span>`]
+              ? dado[`<spanclass="ui-column-title">beneficiário</span>`]
                   .split("-")[0]
                   .trim()
               : "",
-            nome: dado[`<span class="ui-column-title">beneficiário</span>`]
-              ? dado[`<span class="ui-column-title">beneficiário</span>`]
+            nome: dado[`<spanclass="ui-column-title">beneficiário</span>`]
+              ? dado[`<spanclass="ui-column-title">beneficiário</span>`]
                   .split("-")[1]
                   .trim()
               : "",
@@ -211,41 +189,41 @@ function processarTableOrcamento() {
             ]
               ? (
                   dado[
-                    `<span class="ui-column-title">beneficiário</span>`
+                    `<spanclass="ui-column-title">beneficiário</span>`
                   ].split("-")[2] || ""
                 ).trim()
               : "",
             datadeenviosms:
-              dado[`<span class="ui-column-title">datadeenviosms</span>`],
+              dado[`<spanclass="ui-column-title">datadeenviosms</span>`],
             dependentes:
-              dado[`<span class="ui-column-title">dependentes</span>`],
+              dado[`<spanclass="ui-column-title">dependentes</span>`],
             dia_vencimento:
-              dado[`<span class="ui-column-title">vencimento</span>`],
-            dt_vigencia: dado[`<span class="ui-column-title">vigência</span>`],
-            orcamento: dado[`<span class="ui-column-title">orçamento</span>`],
-            senhaSMS: dado[`<span class="ui-column-title">senhasms</span>`],
-            situacao: dado[`<span class="ui-column-title">status/data</span>`]
-              ? dado[`<span class="ui-column-title">status/data</span>`]
+              dado[`<spanclass="ui-column-title">vencimento</span>`],
+            dt_vigencia: dado[`<spanclass="ui-column-title">vigência</span>`],
+            orcamento: dado[`<spanclass="ui-column-title">orçamento</span>`],
+            senhaSMS: dado[`<spanclass="ui-column-title">senhasms</span>`],
+            situacao: dado[`<spanclass="ui-column-title">status/data</span>`]
+              ? dado[`<spanclass="ui-column-title">status/data</span>`]
                   .split("-")[0]
                   .trim()
               : "",
-            dataStatus: dado[`<span class="ui-column-title">status/data</span>`]
-              ? dado[`<span class="ui-column-title">status/data</span>`]
+            dataStatus: dado[`<spanclass="ui-column-title">status/data</span>`]
+              ? dado[`<spanclass="ui-column-title">status/data</span>`]
                   .split("-")[1]
                   .trim()
               : "",
             tipo: dado[
-              `<span class="ui-column-title">titular/responsávelfinanceiro</span>`
+              `<spanclass="ui-column-title">titular/responsávelfinanceiro</span>`
             ],
-            idlead: dado[`<span class="ui-column-title">idlead</span>`],
-            origemlead: dado[`<span class="ui-column-title">origemlead</span>`],
-            codVendedor: dado[`<span class="ui-column-title">vendedor</span>`]
-              ? dado[`<span class="ui-column-title">vendedor</span>`]
+            idlead: dado[`<spanclass="ui-column-title">idlead</span>`],
+            origemlead: dado[`<spanclass="ui-column-title">origemlead</span>`],
+            codVendedor: dado[`<spanclass="ui-column-title">vendedor</span>`]
+              ? dado[`<spanclass="ui-column-title">vendedor</span>`]
                   .split("-")[0]
                   .trim()
               : "",
-            nomeVendedor: dado[`<span class="ui-column-title">vendedor</span>`]
-              ? dado[`<span class="ui-column-title">vendedor</span>`]
+            nomeVendedor: dado[`<spanclass="ui-column-title">vendedor</span>`]
+              ? dado[`<spanclass="ui-column-title">vendedor</span>`]
                   .split("-")[1]
                   .trim()
               : "",
