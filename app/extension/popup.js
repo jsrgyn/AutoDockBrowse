@@ -91,18 +91,6 @@ function incrementarDias(data, dias, formato = "yyyy-mm-dd") {
   if (dtFimProcessamento) elementDtFimProcessamento.value = dtFimProcessamento;
   if (statusProcessamento)
     elementStatusProcessamento.value = statusProcessamento;
-
-  // Lógica para iniciar automático se todos os campos estiverem preenchidos
-  if (
-    diasRetroceder &&
-    diasProcessar &&
-    dtFimProcessamento &&
-    statusProcessamento &&
-    processamento === "N"
-  ) {
-    console.log("Iniciando processamento automaticamente...");
-    btnIniciarAgd.click();
-  }
 })();
 
 document.getElementById("executeAgenda").addEventListener("click", async () => {

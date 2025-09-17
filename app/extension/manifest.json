@@ -19,8 +19,7 @@
         "https://saviatendimento.com.br/saviatendimento/pages/relatorio/*",
         "https://saviatendimento.com.br/saviatendimento/pages/efetivacao/*"
       ],
-      "js": ["savi.js", "content.js"],
-      "run_at": "document_start"
+      "js": ["savi.js"]
     }
   ]
 }
