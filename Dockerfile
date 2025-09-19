@@ -1,4 +1,4 @@
-FROM python:3.9-slim-bullseye
+FROM python:3.9-slim-bullseye AS builder
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
@@ -37,13 +37,18 @@ RUN mkdir -p /app /home/chrome \
     && useradd -r -g chrome -G audio,video chrome \
     && chown -R chrome:chrome /home/chrome /app
 
+# Copia código da aplicação
 WORKDIR /app
 COPY --from=builder /install /usr/local
 COPY app/ .
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
+# Usuário não-root
 USER chrome
+
 ENV HOME=/home/chrome
+
+# Entrypoint e comando padrão
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "script.py"]
