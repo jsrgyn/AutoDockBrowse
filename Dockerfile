@@ -1,27 +1,27 @@
-# Etapa 1: Builder (se precisar instalar dependências Python ou compilar algo)
+# Etapa 1: Builder (para dependências Python)
 FROM python:3.9-slim-bullseye AS builder
 
 # Evita arquivos pyc e força saída no stdout
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV DEBIAN_FRONTEND=noninteractive
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive
 
-# Instala dependências Python se houver requirements.txt
 WORKDIR /install
-# Opcional, se você tiver
-COPY ./app/requirements.txt .  
-RUN pip install --prefix=/install -r requirements.txt || true
+
+# Copia requirements.txt se existir e instala dependências
+COPY ./app/requirements.txt ./requirements.txt
+RUN if [ -f "requirements.txt" ]; then pip install --prefix=/install -r requirements.txt; fi
 
 
 # Etapa 2: Imagem final
 FROM python:3.9-slim-bullseye
 
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV DEBIAN_FRONTEND=noninteractive
-ENV HOME=/home/chrome
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    DEBIAN_FRONTEND=noninteractive \
+    HOME=/home/chrome
 
-# Instala dependências do sistema + Chrome
+# Instala dependências do sistema
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     gnupg \
@@ -42,33 +42,34 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libfontconfig1 \
     libu2f-udev \
     libvulkan1 \
-    
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# instalar chrome
-RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
-    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
+# Instala Chrome
+RUN wget -q -O /tmp/linux_signing_key.pub https://dl-ssl.google.com/linux/linux_signing_key.pub \
+    && apt-key add /tmp/linux_signing_key.pub \
+    && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
-    && apt-get install -y google-chrome-stable \    
+    && apt-get install -y google-chrome-stable \
     && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /tmp/linux_signing_key.pub
 
-# cria usuário não-root e pastas necessárias
+# Cria usuário não-root e pastas necessárias
 RUN mkdir -p /app /home/chrome \
     && groupadd -r chrome \
     && useradd -r -g chrome -G audio,video chrome \
     && chown -R chrome:chrome /home/chrome /app
 
+# Copia dependências Python da etapa builder
+COPY --from=builder /install /usr/local
+
 # Copia código da aplicação
 WORKDIR /app
-COPY --from=builder /install /usr/local
 COPY app/ .
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Usuário não-root
+# Usa usuário não-root
 USER chrome
-
-ENV HOME=/home/chrome
 
 # Entrypoint e comando padrão
 ENTRYPOINT ["/entrypoint.sh"]

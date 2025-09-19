@@ -3,6 +3,8 @@ services:
   autodock:
     build: .
     container_name: autodock_browse_instance
+    env_file:
+      - ./app/.env
     volumes:
       - ./app:/app
     shm_size: "2gb"
