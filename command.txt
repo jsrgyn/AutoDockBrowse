@@ -6,3 +6,27 @@ docker-compose up
 
 docker-compose logs
 
+# Ver logs do container
+docker logs -f autodock_browse_instance
+
+# Entrar no container (interactive)
+docker exec -it autodock_browse_instance /bin/bash
+
+# Ver processos chrome/chromedriver
+ps aux | egrep 'chrome|chromedriver' || true
+
+# Ver possíveis profiles temporários
+ls -la /tmp | egrep chrome_profile || true
+# ou listar conteúdo do profile:
+ls -la /tmp/chrome_profile_* || true
+
+# Checar logs do chromedriver (no container):
+cat /tmp/chromedriver.log || true
+
+# Ver se existe arquivo de lock no profile (quando souber o path mostrado no log):
+ls -la /tmp/chrome_profile_*/*Singleton* || true
+
+
+
+
+

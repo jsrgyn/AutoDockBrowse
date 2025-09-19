@@ -1,0 +1,305 @@
+import os
+import time
+import logging
+import uuid
+import tempfile
+from datetime import datetime
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from dotenv import load_dotenv
+
+# Configurar logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s: %(message)s',
+    handlers=[
+        logging.FileHandler('extension_installation.log', mode='w'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
+
+# Carrega as variáveis de ambiente do arquivo .env
+load_dotenv()
+
+class BrowserSession:
+    def __init__(self, session_id, extension_path, headless=False):
+        self.session_id = session_id
+        self.extension_path = extension_path
+        self.headless = headless
+        self.driver = None
+        self.screenshot_dir = f"screenshots/{session_id}"
+        os.makedirs(self.screenshot_dir, exist_ok=True)
+
+    def take_screenshot(self, name):
+        """Tira um screenshot e salva na pasta da sessão."""
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{self.screenshot_dir}/{name}_{timestamp}.png"
+        self.driver.save_screenshot(filename)
+        logger.info(f"📸 Screenshot salvo: {filename}")
+
+    def configurar_opcoes_chrome(self):
+        """Configura as opções do Chrome para a extensão."""
+        chrome_options = Options()
+        chrome_options.add_argument(f"--load-extension={self.extension_path}")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--disable-dev-shm-usage")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--window-size=1920x1080")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument(f"--disable-extensions-except={self.extension_path}")
+        chrome_options.add_argument("--disable-web-security")
+        
+        if self.headless:
+            chrome_options.add_argument("--headless")
+        
+        chrome_options.add_experimental_option('prefs', {
+            'intl.accept_languages': 'pt-BR',
+            'profile.default_content_settings.popups': 0
+        })
+        chrome_options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        
+        return chrome_options
+
+    def criar_webdriver(self):
+        """Cria uma instância do WebDriver com opções configuradas."""
+        try:
+            # Criar diretório temporário único
+            user_data_dir = tempfile.mkdtemp(prefix=f"chrome-data-{self.session_id}-")
+            logger.info("📁 Diretório de dados do usuário: %s", user_data_dir)
+            
+            chrome_options = self.configurar_opcoes_chrome()
+            chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
+            
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            
+            driver.set_page_load_timeout(30)
+            driver.implicitly_wait(10)
+            
+            return driver
+        
+        except Exception as e:
+            logger.error("❌ Erro ao criar WebDriver: %s", e)
+            raise
+
+    def iniciar(self, url_alvo):
+        """Inicia a sessão do navegador e navega para a URL alvo."""
+        try:
+            self.driver = self.criar_webdriver()
+            self.driver.get(url_alvo)
+            self.take_screenshot("pagina_inicial")
+            time.sleep(5)
+            return True
+        except Exception as e:
+            logger.error("❌ Erro ao iniciar sessão: %s", e)
+            return False
+
+    def fechar(self):
+        """Fecha a sessão do navegador."""
+        if self.driver:
+            self.driver.quit()
+            logger.info("✅ WebDriver encerrado para a sessão %s.", self.session_id)
+
+def prepare_extension_environment():
+    """Prepara o ambiente da extensão e retorna informações detalhadas."""
+    extension_path = '/app/extension'
+    
+    if not os.path.exists(extension_path):
+        logger.error("❌ ERRO CRÍTICO: Diretório da extensão não encontrado em: %s", extension_path)
+        logger.info("Conteúdo de /app: %s", 
+                    os.listdir('/app') if os.path.exists('/app') else 'Diretório /app não existe')
+        raise FileNotFoundError(f"Diretório da extensão não encontrado: {extension_path}")
+    
+    logger.info("📦 Diretório da extensão verificado: %s", extension_path)
+    extensao_arquivos = os.listdir(extension_path)
+    logger.info("📄 Arquivos da extensão encontrados: %s", extensao_arquivos)
+    
+    detalhes_arquivos = {}
+    for arquivo in extensao_arquivos:
+        caminho_completo = os.path.join(extension_path, arquivo)
+        tamanho = os.path.getsize(caminho_completo)
+        detalhes_arquivos[arquivo] = tamanho
+        logger.info("📝 Arquivo: %s | Tamanho: %d bytes", arquivo, tamanho)
+    
+    return {
+        'path': extension_path,
+        'arquivos': detalhes_arquivos
+    }
+
+def configurar_e_executar_extensao(session):
+    """
+    Configura e executa a extensão na sessão fornecida.
+    
+    :param session: Instância da BrowserSession
+    """
+    try:
+        # Encontrar o ID da extensão
+        extension_id = find_savi_extension_id(session.extension_path)
+        
+        if not extension_id:
+            logger.error("❌ Extensão SAVI não encontrada!")
+            return False
+        
+        # URL do popup da extensão
+        popup_url = f'chrome-extension://{extension_id}/popup.html'
+        logger.info("🌐 URL do popup: %s", popup_url)
+        
+        # Abrir popup em uma nova janela
+        session.driver.execute_script(f"window.open('{popup_url}', '_blank');")
+        time.sleep(3)
+        
+        # Mudar para a janela do popup
+        session.driver.switch_to.window(session.driver.window_handles[-1])
+        session.take_screenshot("popup_aberto")
+        
+        # Preencher campos do popup
+        preencher_popup(session.driver)
+        session.take_screenshot("popup_preenchido")
+        
+        # Clicar no botão Iniciar
+        iniciar_button = session.driver.find_element(By.ID, "btnIniciarAgd")
+        iniciar_button.click()
+        session.take_screenshot("processo_iniciado")
+        
+        time.sleep(5)
+        
+        # Voltar para a janela principal
+        session.driver.switch_to.window(session.driver.window_handles[0])
+        
+        return True
+        
+    except Exception as e:
+        logger.error("❌ Erro ao configurar extensão: %s", e)
+        session.take_screenshot("erro_extensao")
+        return False
+
+def find_savi_extension_id(extension_path):
+    """
+    Encontra o ID da extensão SAVI.
+    
+    :param extension_path: Caminho para o diretório da extensão
+    :return: ID da extensão ou None se não encontrado
+    """
+    try:
+        import json
+        import hashlib
+        
+        manifest_path = os.path.join(extension_path, 'manifest.json')
+        
+        with open(manifest_path, 'r') as manifest_file:
+            manifest = json.load(manifest_file)
+            
+            extension_name = manifest.get('name', 'Savi')
+            version = manifest.get('version', '1.0')
+            
+            # Gerar ID baseado no nome e versão (método alternativo)
+            def generate_extension_id(name, version):
+                hash_input = f"{name}_{version}".encode()
+                hash_obj = hashlib.sha256(hash_input)
+                return hash_obj.hexdigest()[:32].lower()
+            
+            extension_id = generate_extension_id(extension_name, version)
+            
+            logger.info("📦 Informações da Extensão:")
+            logger.info("   📋 Nome: %s", extension_name)
+            logger.info("   🆔 ID Gerado: %s", extension_id)
+            logger.info("   🏷️ Versão: %s", version)
+            
+            return extension_id
+            
+    except Exception as e:
+        logger.error("❌ Erro ao encontrar ID da extensão: %s", e)
+        return None
+
+def preencher_popup(driver):
+    """
+    Preenche os campos do popup da extensão.
+    
+    :param driver: WebDriver do Selenium
+    """
+    # Valores para configuração
+    dias_retroceder = os.getenv("Dias_Retroceder", "180")
+    dias_processar = os.getenv("Dias_Processar", "1")
+    data_fim = datetime.now().strftime('%Y-%m-%d')
+    status_processamento = '9'
+    
+    # Dias a Retroceder
+    dias_retroceder_input = driver.find_element(By.ID, "diasRetroceder")
+    dias_retroceder_input.clear()
+    dias_retroceder_input.send_keys(dias_retroceder)
+    
+    # Dias a Processar
+    dias_processar_input = driver.find_element(By.ID, "diasProcessar")
+    dias_processar_input.clear()
+    dias_processar_input.send_keys(dias_processar)
+    
+    # Data Final de Processamento
+    data_fim_input = driver.find_element(By.ID, "dtFimProcessamento")
+    data_fim_input.clear()
+    data_fim_input.send_keys(data_fim)
+    
+    # Status de Processamento
+    status_processamento_select = Select(driver.find_element(By.ID, "statusProcessamento"))
+    status_processamento_select.select_by_value(status_processamento)
+
+def run_multiple_sessions(num_sessions=1):
+    """
+    Executa múltiplas sessões do navegador com a extensão.
+    
+    :param num_sessions: Número de sessões para executar
+    """
+    logger.info("🚀 Iniciando automação com %d sessões...", num_sessions)
+    
+    # Preparar ambiente da extensão
+    try:
+        ambiente_extensao = prepare_extension_environment()
+    except FileNotFoundError:
+        return
+
+    sessions = []
+    
+    # Criar e iniciar sessões
+    for i in range(num_sessions):
+        session_id = f"session_{i+1}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        session = BrowserSession(session_id, ambiente_extensao['path'])
+        
+        logger.info("🆕 Iniciando sessão: %s", session_id)
+        
+        url_alvo = os.getenv("TARGET_URL", "https://www.google.com")
+        if session.iniciar(url_alvo):
+            sessions.append(session)
+            
+            # Configurar e executar extensão
+            if configurar_e_executar_extensao(session):
+                logger.info("✅ Sessão %s configurada com sucesso.", session_id)
+            else:
+                logger.error("❌ Falha ao configurar extensão na sessão %s.", session_id)
+        else:
+            logger.error("❌ Falha ao iniciar sessão %s.", session_id)
+    
+    # Manter as sessões abertas por um tempo ou até interrupção
+    try:
+        logger.info("⏳ Todas as sessões estão em execução. Pressione Ctrl+C para finalizar.")
+        while True:
+            time.sleep(10)
+            # Tirar screenshot periódico de cada sessão
+            for i, session in enumerate(sessions):
+                session.take_screenshot(f"periodic_check_{int(time.time())}")
+    except KeyboardInterrupt:
+        logger.info("🛑 Interrupção recebida. Finalizando sessões...")
+    
+    # Fechar todas as sessões
+    for session in sessions:
+        session.fechar()
+    
+    logger.info("✅ Todas as sessões finalizadas.")
+
+if __name__ == "__main__":
+    # Número de sessões a serem executadas (pode ser configurado via variável de ambiente)
+    num_sessions = int(os.getenv("NUM_SESSIONS", "1"))
+    run_multiple_sessions(num_sessions)
