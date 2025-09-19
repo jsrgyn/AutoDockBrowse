@@ -26,7 +26,9 @@ cat /tmp/chromedriver.log || true
 # Ver se existe arquivo de lock no profile (quando souber o path mostrado no log):
 ls -la /tmp/chrome_profile_*/*Singleton* || true
 
+#GIT
+git add . ; git commit -m "Ajustes 2025-09-19 15:21h" ; git push origin main ; git pull origin main
 
-
+git add . && git commit -m "Ajustes 2025-09-19 11:53h" && git push origin main && git pull origin main
 
 
