@@ -1,9 +1,27 @@
+# Etapa 1: Builder (se precisar instalar dependências Python ou compilar algo)
 FROM python:3.9-slim-bullseye AS builder
 
+# Evita arquivos pyc e força saída no stdout
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 ENV DEBIAN_FRONTEND=noninteractive
 
+# Instala dependências Python se houver requirements.txt
+WORKDIR /install
+# Opcional, se você tiver
+COPY ./app/requirements.txt .  
+RUN pip install --prefix=/install -r requirements.txt || true
+
+
+# Etapa 2: Imagem final
+FROM python:3.9-slim-bullseye
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+ENV DEBIAN_FRONTEND=noninteractive
+ENV HOME=/home/chrome
+
+# Instala dependências do sistema + Chrome
 RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     gnupg \
@@ -22,16 +40,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libnss3 \
     libgconf-2-4 \
     libfontconfig1 \
-    && rm -rf /var/lib/apt/lists/*
+    libu2f-udev \
+    libvulkan1 \
+    
 
 # instalar chrome
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - \
     && echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list \
     && apt-get update \
-    && apt-get install -y google-chrome-stable \
+    && apt-get install -y google-chrome-stable \    
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# cria usuário não-root opcional
+# cria usuário não-root e pastas necessárias
 RUN mkdir -p /app /home/chrome \
     && groupadd -r chrome \
     && useradd -r -g chrome -G audio,video chrome \
