@@ -1,10 +1,12 @@
 import os
+import requests
 import time
 import logging
 import tempfile
 import uuid
 import shutil
 import socket
+from base64 import b64encode
 from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -125,6 +127,8 @@ class BrowserSession:
             logger.error(f"❌ Erro ao acessar site: {e}")
             return False
 
+
+
     def preencher_formulario_login(self):
         try:
             cpf = os.getenv("usr_cpf")
@@ -144,11 +148,58 @@ class BrowserSession:
             senha_input.clear()
             senha_input.send_keys(senha)
 
+            # --- NOVA LÓGICA PARA RESOLVER O CAPTCHA ---
             try:
                 captcha_input = self.driver.find_element(By.ID, "login_form:codigo_captcha")
-                logger.info("⚠️ Captcha detectado — implementar resolução se necessário")
-            except:
-                pass
+                logger.info("🕵️‍♂️ Captcha detectado - Iniciando resolução...")
+
+                # 1. Encontrar o elemento da imagem do CAPTCHA (ajuste o seletor conforme necessário)
+                captcha_image = self.driver.find_element(By.XPATH, "//img[contains(@src, 'captcha') or contains(@id, 'captcha')]")
+                captcha_image.screenshot("captcha.png")  # Tira um screenshot da imagem
+
+                # 2. Usar um serviço para resolver o CAPTCHA (exemplo com 2Captcha)
+                api_key = "SUA_CHAVE_API_2CAPTCHA"
+                with open("captcha.png", "rb") as image_file:
+                    encoded_image = b64encode(image_file.read()).decode('utf-8')
+
+                # Enviar a imagem para a API
+                response = requests.post(
+                    url='https://2captcha.com/in.php',
+                    data={
+                        'key': api_key,
+                        'method': 'base64',
+                        'body': encoded_image,
+                        'json': 1
+                    }
+                ).json()
+
+                if response['status'] != 1:
+                    logger.error(f"❌ Erro ao enviar CAPTCHA: {response.get('request')}")
+                    return False
+
+                task_id = response['request']
+                # Aguardar a resolução
+                for _ in range(30):  # Tenta por até 30 segundos
+                    time.sleep(1)
+                    result = requests.get(
+                        url=f'https://2captcha.com/res.php?key={api_key}&action=get&id={task_id}&json=1'
+                    ).json()
+                    if result['status'] == 1:
+                        captcha_solution = result['request']
+                        break
+                else:
+                    logger.error("❌ Tempo esgotado aguardando resolução do CAPTCHA")
+                    return False
+
+                # 3. Preencher o campo com a solução
+                captcha_input.clear()
+                captcha_input.send_keys(captcha_solution)
+                logger.info("✅ CAPTCHA resolvido com sucesso.")
+
+            except Exception as e:
+                logger.error(f"❌ Erro durante a resolução do CAPTCHA: {e}")
+                return False
+            # --- FIM DA NOVA LÓGICA ---
 
             self.driver.find_element(By.ID, "login_form:j_idt24").click()
             time.sleep(3)
@@ -156,7 +207,7 @@ class BrowserSession:
             if self.driver.current_url != self.current_url:
                 logger.info("🔐 Login realizado")
             return True
-
+        
         except Exception as e:
             logger.error(f"❌ Erro no login: {e}")
             return False
